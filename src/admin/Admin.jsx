@@ -56,6 +56,7 @@ function Login() {
   const [email, setEmail] = useState('');
   const [code, setCode] = useState('');
   const [state, setState] = useState('idle');
+  const [why, setWhy] = useState('');
   const submit = async (e) => {
     e.preventDefault();
     setState('busy');
@@ -63,7 +64,14 @@ function Login() {
     try {
       const r = await backend.signIn(email);
       setState(r.sent ? 'sent' : 'idle');
-    } catch {
+    } catch (err) {
+      const msg = String(err?.message || err?.code || '');
+      setWhy(
+        /rate|429|seconds/i.test(msg) ? 'Too many sign-in emails. Wait a few minutes, then try once.'
+        : /signup|not allowed|not found/i.test(msg) ? 'This email is not set up as a user in Supabase (Auth → Users → Invite user).'
+        : /redirect/i.test(msg) ? 'Supabase rejected the return address. Add this site to Auth → URL configuration.'
+        : `Couldn't send the link: ${msg || 'unknown error'}`,
+      );
       setState('denied');
     }
   };
@@ -79,7 +87,7 @@ function Login() {
           <>
             <Field id="email" label="Email"
               hint={backend.mode === 'local' ? 'Local demo: use roychababi53@gmail.com. No email is sent, you sign in right away.' : null}
-              error={state === 'denied' ? "Couldn't sign in with that address." : null}>
+              error={state === 'denied' ? why : null}>
               <input id="email" className="input" type="email" autoComplete="email" required value={email}
                 onChange={(e) => setEmail(e.target.value)} />
             </Field>

@@ -1,0 +1,19 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npx -y supabase@2 *)",
+      "Bash(npx supabase *)",
+      "Bash(supabase *)",
+      "Bash(gh *)",
+      "Bash(git *)",
+      "Bash(npm *)",
+      "Bash(npx vite *)",
+      "Bash(node *)",
+      "Bash(curl *)",
+      "Edit(**)",
+      "Read",
+      "WebFetch",
+      "mcp__playwright__*"
+    ]
+  }
+}

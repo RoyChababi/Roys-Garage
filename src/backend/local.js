@@ -166,6 +166,11 @@ export const localBackend = {
     authListeners.forEach((f) => f(user));
     return { user, sent: false };
   },
+  // Local demo: any password works for the admin email.
+  signInWithPassword: async (email) => {
+    await localBackend.signIn(email);
+  },
+  setPassword: async () => {},
   signOut: async () => {
     localStorage.removeItem(SESSION_KEY);
     authListeners.forEach((f) => f(null));

@@ -45,34 +45,41 @@ export default function Admin() {
   return user ? <Panel user={user} /> : <Login />;
 }
 
-// SHA-256 of the admin access code, so the code itself isn't readable in the site's source.
-const CODE_HASH = '490b9b56f21cc9bf43cff46ce51061baa76a8b7e236390034537df4ebd229269';
-async function codeMatches(code) {
-  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(code.trim()));
-  return [...new Uint8Array(buf)].map((b) => b.toString(16).padStart(2, '0')).join('') === CODE_HASH;
-}
+const authError = (err) => {
+  const msg = String(err?.message || err?.code || '');
+  if (/invalid login|invalid_credentials/i.test(msg)) return 'Wrong email or password.';
+  if (/rate|429|seconds/i.test(msg)) return 'Too many tries. Wait a few minutes, then try once.';
+  if (/signup|not allowed|not found/i.test(msg)) return 'This email is not set up as a user in Supabase (Auth → Users → Invite user).';
+  if (/redirect/i.test(msg)) return 'Supabase rejected the return address. Add this site to Auth → URL configuration.';
+  return `Couldn't sign in: ${msg || 'unknown error'}`;
+};
 
 function Login() {
   const [email, setEmail] = useState('');
-  const [code, setCode] = useState('');
+  const [password, setPassword] = useState('');
   const [state, setState] = useState('idle');
   const [why, setWhy] = useState('');
+  const fail = (err) => {
+    setWhy(authError(err));
+    setState('error');
+  };
   const submit = async (e) => {
     e.preventDefault();
     setState('busy');
-    if (!(await codeMatches(code).catch(() => false))) return setState('badcode');
+    try {
+      await backend.signInWithPassword(email, password);
+    } catch (err) {
+      fail(err);
+    }
+  };
+  const sendLink = async () => {
+    if (!email.trim()) return fail({ message: 'Type your email first, then tap the link button.' });
+    setState('busy');
     try {
       const r = await backend.signIn(email);
       setState(r.sent ? 'sent' : 'idle');
     } catch (err) {
-      const msg = String(err?.message || err?.code || '');
-      setWhy(
-        /rate|429|seconds/i.test(msg) ? 'Too many sign-in emails. Wait a few minutes, then try once.'
-        : /signup|not allowed|not found/i.test(msg) ? 'This email is not set up as a user in Supabase (Auth → Users → Invite user).'
-        : /redirect/i.test(msg) ? 'Supabase rejected the return address. Add this site to Auth → URL configuration.'
-        : `Couldn't send the link: ${msg || 'unknown error'}`,
-      );
-      setState('denied');
+      fail(err);
     }
   };
   return (
@@ -82,22 +89,26 @@ function Login() {
         <BrandMark size={44} />
         <h2 style={{ fontSize: 40 }}>Roy's admin</h2>
         {state === 'sent' ? (
-          <div className="notice amber">Check {email} for a sign-in link. It opens this panel on your phone.</div>
+          <div className="notice amber">Check {email} for a sign-in link. Once you're in, set a password in Settings → Account.</div>
         ) : (
           <>
             <Field id="email" label="Email"
-              hint={backend.mode === 'local' ? 'Local demo: use roychababi53@gmail.com. No email is sent, you sign in right away.' : null}
-              error={state === 'denied' ? why : null}>
-              <input id="email" className="input" type="email" autoComplete="email" required value={email}
+              hint={backend.mode === 'local' ? 'Local demo: use roychababi53@gmail.com with any password.' : null}>
+              <input id="email" className="input" type="email" autoComplete="username" required value={email}
                 onChange={(e) => setEmail(e.target.value)} />
             </Field>
-            <Field id="code" label="Code" error={state === 'badcode' ? 'Wrong code.' : null}>
-              <input id="code" className="input" type="password" inputMode="numeric" autoComplete="off" required
-                value={code} onChange={(e) => setCode(e.target.value)} />
+            <Field id="password" label="Password" error={state === 'error' ? why : null}>
+              <input id="password" className="input" type="password" autoComplete="current-password" required
+                value={password} onChange={(e) => setPassword(e.target.value)} />
             </Field>
             <button className="btn btn-primary" type="submit" disabled={state === 'busy'}>
-              {state === 'busy' ? <Spinner /> : backend.mode === 'local' ? 'Sign in' : 'Email me a sign-in link'}
+              {state === 'busy' ? <Spinner /> : 'Sign in'}
             </button>
+            {backend.mode !== 'local' && (
+              <button type="button" className="btn btn-ghost small" onClick={sendLink} disabled={state === 'busy'}>
+                No password yet, or forgot it? Email me a sign-in link
+              </button>
+            )}
           </>
         )}
         <a href="#/" className="small muted" style={{ textAlign: 'center' }}>Back to the site</a>

@@ -20,6 +20,43 @@ const SETTING_FIELDS = [
   ['site_url', 'Site URL', 'url', 'Used in quote and reminder texts. Leave empty to use the current address.'],
 ];
 
+function PasswordBox({ toast }) {
+  const [pw, setPw] = useState('');
+  const [pw2, setPw2] = useState('');
+  const [err, setErr] = useState('');
+  const [busy, setBusy] = useState(false);
+  const save = async () => {
+    if (pw.length < 8) return setErr('Use at least 8 characters.');
+    if (pw !== pw2) return setErr("The two passwords don't match.");
+    setBusy(true);
+    try {
+      await backend.setPassword(pw);
+      setPw('');
+      setPw2('');
+      setErr('');
+      toast('Password saved. Sign in with your email and this password from now on.');
+    } catch (e) {
+      setErr(`Couldn't save the password: ${e?.message || e}`);
+    } finally {
+      setBusy(false);
+    }
+  };
+  return (
+    <div className="stack">
+      <div className="field">
+        <label htmlFor="pw1">New password</label>
+        <input id="pw1" className="input input-sm" type="password" autoComplete="new-password" value={pw} onChange={(e) => setPw(e.target.value)} />
+      </div>
+      <div className="field">
+        <label htmlFor="pw2">Type it again</label>
+        <input id="pw2" className="input input-sm" type="password" autoComplete="new-password" value={pw2} onChange={(e) => setPw2(e.target.value)} />
+        {err ? <span className="err">{err}</span> : <span className="hint">Your phone can save it, so you only type it once.</span>}
+      </div>
+      <button type="button" className="btn" onClick={save} disabled={busy || !pw}>Set password</button>
+    </div>
+  );
+}
+
 export default function Settings() {
   const { settings, prices, refresh, toast, user } = useAdmin();
   const [p, setP] = useState(prices);
@@ -72,6 +109,7 @@ export default function Settings() {
       <div className="section-title">Account</div>
       <div className="card stack">
         <div className="small muted">Signed in as {user?.email}</div>
+        <PasswordBox toast={toast} />
         <button type="button" className="btn" onClick={() => backend.signOut()}><Icon name="logout" size={18} /> Sign out</button>
         {backend.mode === 'local' && (
           <button type="button" className="btn btn-ghost btn-danger" onClick={async () => { await backend.resetDemo(); window.location.reload(); }}>

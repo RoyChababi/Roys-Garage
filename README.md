@@ -21,7 +21,7 @@ The sample car-table specs (litres, grade, filter) are placeholders. Check them 
 2. In the SQL editor, run `supabase/migrations/001_init.sql`. It creates the tables, row-level security, the booking rules in SQL, and adds Roy's admin address. Then run `supabase/seed_car_table.sql` to load the starter car table (~2,800 rows).
 3. Auth → Providers → Email: keep it on, and **turn off "Allow new users to sign up"**.
 4. Auth → Users → **Invite user**: `roychababi53@gmail.com`. Only addresses listed in `admin_users` can read or change data.
-5. Auth → URL configuration: set Site URL to `https://roychababi.github.io/roys-garage/` and add it to the redirect URLs, along with `http://localhost:5173/`.
+5. Auth → URL configuration: set Site URL to `https://roychababi.github.io/Roys-Garage/` and add it to the redirect URLs, along with `http://localhost:5173/`.
 6. Edge Functions (needs the Supabase CLI):
    ```bash
    supabase functions deploy notify --no-verify-jwt
@@ -32,7 +32,7 @@ The sample car-table specs (litres, grade, filter) are placeholders. Check them 
 7. Copy `.env.example` to `.env` and fill in the project URL and anon key.
 
 ### 2. GitHub Pages
-1. Push this repo to `github.com/RoyChababi/roys-garage`.
+1. Push this repo to `github.com/RoyChababi/Roys-Garage`.
 2. Settings → Pages → Source: **GitHub Actions**.
 3. Settings → Secrets → Actions: add `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY`.
 4. Every push to `main` runs the tests, builds and deploys (`.github/workflows/deploy.yml`).

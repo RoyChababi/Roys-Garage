@@ -62,8 +62,7 @@ export default function Home() {
           </a>
         </main>
         <footer className="footer-note">
-          {lang === 'fr' ? 'Ouest-de-l’Île, Montréal' : 'West Island, Montreal'} <span aria-hidden="true">/</span>{' '}
-          <a href="#/admin">{t('adminLink')}</a>
+          {lang === 'fr' ? 'Ouest-de-l’Île, Montréal' : 'West Island, Montreal'}
         </footer>
       </div>
     </>

@@ -4,6 +4,7 @@ import { useRoute } from './components/ui.jsx';
 import Home from './customer/Home.jsx';
 import Flow from './customer/Flow.jsx';
 import { ConfigProvider } from './customer/config.jsx';
+import { authLanding } from './backend/index.js';
 
 const Admin = lazy(() => import('./admin/Admin.jsx'));
 
@@ -24,8 +25,8 @@ export default function App() {
 
   const ctx = useMemo(() => ({ lang, setLang, t: (k, v) => translate(lang, k, v) }), [lang]);
 
-  // Supabase magic links land with "#access_token=…"; send those to admin.
-  const isAdmin = path.startsWith('/admin') || window.location.hash.includes('access_token=');
+  // A magic-link landing goes to admin even after Supabase has cleared the token from the URL.
+  const isAdmin = path.startsWith('/admin') || authLanding.pending;
 
   return (
     <LangContext.Provider value={ctx}>

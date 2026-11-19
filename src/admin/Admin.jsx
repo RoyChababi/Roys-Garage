@@ -1,5 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useState } from 'react';
-import { backend } from '../backend/index.js';
+import { backend, authLanding } from '../backend/index.js';
 import { BrandMark, DemoBanner, Field, Icon, Spinner, Toast, go, useRoute } from '../components/ui.jsx';
 import { DEFAULT_SETTINGS } from '../backend/local.js';
 import { DEFAULT_PRICES } from '../lib/pricing.js';
@@ -28,22 +28,38 @@ export default function Admin() {
   useEffect(() => {
     document.documentElement.lang = 'en-CA';
     document.title = "Admin | Roy's Garage";
-    backend.getUser().then(setUser, () => setUser(null));
-    return backend.onAuthChange((u) => {
-      setUser(u);
-      if (u && window.location.hash.includes('access_token=')) go('/admin');
-    });
+    // getUser waits for Supabase to finish reading the magic link, then the URL becomes #/admin.
+    const landed = () => {
+      if (authLanding.pending) {
+        authLanding.pending = false;
+        go('/admin');
+      }
+    };
+    backend.getUser().then(
+      (u) => { setUser(u); landed(); },
+      () => { setUser(null); landed(); },
+    );
+    return backend.onAuthChange(setUser);
   }, []);
   if (user === undefined) return null;
   return user ? <Panel user={user} /> : <Login />;
 }
 
+// SHA-256 of the admin access code, so the code itself isn't readable in the site's source.
+const CODE_HASH = '490b9b56f21cc9bf43cff46ce51061baa76a8b7e236390034537df4ebd229269';
+async function codeMatches(code) {
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(code.trim()));
+  return [...new Uint8Array(buf)].map((b) => b.toString(16).padStart(2, '0')).join('') === CODE_HASH;
+}
+
 function Login() {
   const [email, setEmail] = useState('');
+  const [code, setCode] = useState('');
   const [state, setState] = useState('idle');
   const submit = async (e) => {
     e.preventDefault();
     setState('busy');
+    if (!(await codeMatches(code).catch(() => false))) return setState('badcode');
     try {
       const r = await backend.signIn(email);
       setState(r.sent ? 'sent' : 'idle');
@@ -62,10 +78,14 @@ function Login() {
         ) : (
           <>
             <Field id="email" label="Email"
-              hint={backend.mode === 'local' ? 'Local demo: use roychababi53@gmail.com. No email is sent, you sign in right away.' : "Only Roy's address can sign in."}
-              error={state === 'denied' ? "That address can't sign in here." : null}>
+              hint={backend.mode === 'local' ? 'Local demo: use roychababi53@gmail.com. No email is sent, you sign in right away.' : null}
+              error={state === 'denied' ? "Couldn't sign in with that address." : null}>
               <input id="email" className="input" type="email" autoComplete="email" required value={email}
                 onChange={(e) => setEmail(e.target.value)} />
+            </Field>
+            <Field id="code" label="Code" error={state === 'badcode' ? 'Wrong code.' : null}>
+              <input id="code" className="input" type="password" inputMode="numeric" autoComplete="off" required
+                value={code} onChange={(e) => setCode(e.target.value)} />
             </Field>
             <button className="btn btn-primary" type="submit" disabled={state === 'busy'}>
               {state === 'busy' ? <Spinner /> : backend.mode === 'local' ? 'Sign in' : 'Email me a sign-in link'}

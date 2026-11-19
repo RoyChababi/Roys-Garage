@@ -55,7 +55,8 @@ export function createSupabaseBackend(url, key) {
     // ---------- auth ----------
     getUser: async () => (await sb.auth.getSession()).data.session?.user ?? null,
     signIn: async (email) => {
-      const redirect = window.location.origin + window.location.pathname + '#/admin';
+      // No "#/admin" here: Supabase appends its own #access_token, and two hashes break the login.
+      const redirect = window.location.origin + window.location.pathname;
       const { error } = await sb.auth.signInWithOtp({
         email: email.trim(),
         options: { shouldCreateUser: false, emailRedirectTo: redirect },

@@ -14,7 +14,7 @@ create table if not exists settings (
   etransfer_email text not null default 'roychababi53@gmail.com',
   notification_email text not null default 'roychababi53@gmail.com',
   pickup_street text not null default 'rue Simonet',
-  site_url text not null default 'https://roychababi.github.io/roys-garage/',
+  site_url text not null default 'https://roychababi.github.io/Roys-Garage/',
   max_per_day int not null default 3,
   slot_minutes int not null default 60,
   back_to_back boolean not null default true,

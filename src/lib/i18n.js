@@ -123,8 +123,6 @@ export const dict = {
     // Quote link
     quoteLinkTitle: 'Your quoted price',
     quoteLinkMissing: "This booking link isn't valid anymore. Text Roy for a new one.",
-    // misc
-    adminLink: 'Admin',
   },
   fr: {
     langName: 'EN',
@@ -241,7 +239,6 @@ export const dict = {
     calDesc: "Changement d'huile pour votre {car}. Prix {price}. Payez après par virement Interac ou comptant. Questions : textez le {phone}.",
     quoteLinkTitle: 'Votre prix soumis',
     quoteLinkMissing: "Ce lien de réservation n'est plus valide. Textez Roy pour en obtenir un nouveau.",
-    adminLink: 'Admin',
   },
 };
 

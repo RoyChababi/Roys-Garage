@@ -1,7 +1,7 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 
-// Relative base so the build works at roychababi.github.io/roys-garage/ (hash routing, no server rewrites needed).
+// Relative base so the build works at roychababi.github.io/Roys-Garage/ (hash routing, no server rewrites needed).
 export default defineConfig({
   plugins: [react()],
   base: './',

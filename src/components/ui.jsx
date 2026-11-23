@@ -1,4 +1,4 @@
-import { useEffect, useState, useSyncExternalStore } from 'react';
+import { cloneElement, isValidElement, useEffect, useState, useSyncExternalStore } from 'react';
 import { useLang } from '../lib/i18n.js';
 import { backend } from '../backend/index.js';
 
@@ -85,11 +85,21 @@ export function DemoBanner() {
 }
 
 export function Field({ id, label, hint, error, children }) {
+  // Link the input to its message so screen readers read the error (or hint) with the field.
+  const msgId = error ? `${id}-err` : hint ? `${id}-hint` : undefined;
+  const child =
+    msgId && isValidElement(children) && children.props.id === id
+      ? cloneElement(children, { 'aria-describedby': msgId })
+      : children;
   return (
     <div className="field">
       <label htmlFor={id}>{label}</label>
-      {children}
-      {error ? <span className="err" id={`${id}-err`}>{error}</span> : hint ? <span className="hint">{hint}</span> : null}
+      {child}
+      {error ? (
+        <span className="err" id={`${id}-err`} role="alert">{error}</span>
+      ) : hint ? (
+        <span className="hint" id={`${id}-hint`}>{hint}</span>
+      ) : null}
     </div>
   );
 }
